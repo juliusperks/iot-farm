@@ -3,11 +3,13 @@ import sqlite3
 from datetime import datetime, timezone
 from typing import Optional
 import paho.mqtt.client as mqtt
+import hmac as hmac_lib
 
 BROKER_HOST     = "localhost"
 BROKER_PORT     = 1883
 SUBSCRIBE_TOPIC = "farm/+/telemetry"
 DB_PATH         = "telemetry.db"
+SHARED_SECRET = "farmkey123"  # Must match the device's secret for hash validation
 
 def parse_payload(raw: bytes) -> Optional[dict]:
     if not raw:
@@ -24,6 +26,19 @@ def parse_payload(raw: bytes) -> Optional[dict]:
     except (KeyError, TypeError, ValueError):
         return None
     return payload
+
+def verify_payload(payload: dict) -> bool:
+    received_hash = payload.get("hash")
+    if not received_hash:
+        return False
+    check = {k: v for k, v in payload.items() if k != "hash"}
+    payload_bytes = json.dumps(check, sort_keys=True).encode()
+    expected = hmac_lib.new(
+        SHARED_SECRET.encode(),
+        payload_bytes,
+        hashlib.sha256
+    ).hexdigest()
+    return hmac_lib.compare_digest(received_hash, expected)
 
 class MessageStore:
     def __init__(self, db_path: str = DB_PATH):
@@ -76,6 +91,9 @@ def on_message(client, userdata, msg):
     payload = parse_payload(msg.payload)
     if payload is None:
         print(f"[subscriber] Rejected bad message")
+        return
+    if not verify_payload(payload):
+        print(f"[subscriber] Rejected message — hash verification failed")
         return
     _store.insert(payload)
     print(f"[subscriber] Stored {payload['device_id']}")

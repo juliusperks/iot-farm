@@ -44,8 +44,14 @@ class TestTelemetryPayload:
         assert len(payload["hash"]) == 64  # SHA-256 hash length
 
     def test_hash_is_valid_sha256_of_payload(self):
-        import hashlib
+        import hashlib, hmac
+        from device import SHARED_SECRET
         payload = get_telemetry()
         hash_received = payload.pop("hash")
-        recomputed = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
+        payload_bytes = json.dumps(payload, sort_keys=True).encode()
+        recomputed = hmac.new(
+            SHARED_SECRET.encode(),
+            payload_bytes,
+            hashlib.sha256
+        ).hexdigest()
         assert hash_received == recomputed

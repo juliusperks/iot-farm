@@ -4,6 +4,7 @@ import time
 from datetime import datetime, timezone
 import paho.mqtt.client as mqtt
 import hashlib
+import hmac
 
 BROKER_HOST = "localhost"
 BROKER_PORT = 1883
@@ -26,8 +27,11 @@ def get_telemetry() -> dict:
     }
 
     payload_bytes = json.dumps(payload, sort_keys=True).encode()
-    keyed_input = SHARED_SECRET.encode() + payload_bytes
-    payload["hash"] = hashlib.sha256(keyed_input).hexdigest()
+    payload["hash"] = hmac.new(
+        SHARED_SECRET.encode(),
+        payload_bytes,
+        hashlib.sha256
+    ).hexdigest()
     return payload
 
 
