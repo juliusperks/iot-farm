@@ -27,6 +27,7 @@ def on_connect(client, userdata, flags, rc):
 
 if __name__ == "__main__":
     client = mqtt.Client(client_id=DEVICE_ID)
+    client.username_pw_set("paddock-sensor-01", "farm123")
     client.on_connect = on_connect
     client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
     client.loop_start()

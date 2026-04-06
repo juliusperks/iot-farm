@@ -82,6 +82,7 @@ def on_message(client, userdata, msg):
 
 if __name__ == "__main__":
     client = mqtt.Client(client_id="cloud-subscriber")
+    client.username_pw_set("cloud-subscriber", "farm123")
     client.on_connect = on_connect
     client.on_message = on_message
     client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
