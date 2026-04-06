@@ -35,3 +35,17 @@ class TestTelemetryPayload:
         for _ in range(200):
             get_telemetry()
         assert get_telemetry()["battery"] < first
+    
+    def test_payload_contains_hash(self):
+        payload = get_telemetry()
+        assert "hash" in payload
+        hash_val = payload["hash"]
+        assert isinstance(payload["hash"], str)
+        assert len(payload["hash"]) == 64  # SHA-256 hash length
+
+    def test_hash_is_valid_sha256_of_payload(self):
+        import hashlib
+        payload = get_telemetry()
+        hash_received = payload.pop("hash")
+        recomputed = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
+        assert hash_received == recomputed
