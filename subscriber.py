@@ -3,6 +3,7 @@ import sqlite3
 from datetime import datetime, timezone
 from typing import Optional
 import paho.mqtt.client as mqtt
+import hashlib
 import hmac as hmac_lib
 
 BROKER_HOST     = "localhost"
