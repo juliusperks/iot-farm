@@ -1,7 +1,14 @@
 FROM python:3.8-slim
+
 WORKDIR /app
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
 COPY subscriber.py monitor.py ./
+COPY --from=iot-farm-broker:latest /tmp/ca.crt /app/ca.crt
+
 ENV BROKER_HOST=broker
-CMD [ "python3", "monitor.py" ]
+ENV BROKER_PORT=8883
+
+CMD ["python3", "monitor.py"]

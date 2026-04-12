@@ -26,6 +26,9 @@ RUN openssl x509 -req -days 365 \
         -CAkey /mosquitto/certs/ca.key \
         -CAcreateserial \
         -out /mosquitto/certs/broker.crt
+    
+# Export CA cert for clients
+RUN cp /mosquitto/certs/ca.crt /tmp/ca.crt
 
 # Create password file
 RUN mkdir -p /mosquitto/config && \
