@@ -1,0 +1,41 @@
+services:
+  broker:
+    build: ./mqtt-broker
+    ports:
+      - "1883:1883"
+    networks:
+      - farm-net
+
+  device:
+    build:
+      context: .
+      dockerfile: Dockerfile.device
+    container_name: iot-device
+    depends_on:
+      - broker
+    networks:
+      - farm-net
+  
+  subscriber:
+    build:
+      context: .
+      dockerfile: Dockerfile.subscriber
+    container_name: iot-subscriber
+    depends_on:
+      - broker
+    networks:
+      - farm-net
+
+  monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile.monitor
+    container_name: iot-monitor
+    depends_on:
+      - subscriber
+    networks:
+      - farm-net
+  
+networks:
+  farm-net:
+    driver: bridge
