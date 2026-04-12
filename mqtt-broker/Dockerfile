@@ -1,5 +1,7 @@
 FROM eclipse-mosquitto
 
+RUN apk add --no-cache tcpdump
+
 COPY mosquitto.conf /mosquitto/config/mosquitto.conf
 
 RUN mkdir -p /mosquitto/config && \
