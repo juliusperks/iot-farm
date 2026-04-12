@@ -5,10 +5,11 @@ from datetime import datetime, timezone
 import paho.mqtt.client as mqtt
 import hashlib
 import hmac
+import os
 
-BROKER_HOST = "localhost"
-BROKER_PORT = 1883
-DEVICE_ID   = "paddock-sensor-01"
+BROKER_HOST = os.getenv("BROKER_HOST", "localhost")
+BROKER_PORT = int(os.getenv("BROKER_PORT", 1883))
+DEVICE_ID = os.getenv("DEVICE_ID", "paddock-sensor-01")
 TOPIC       = f"farm/{DEVICE_ID}/telemetry"
 INTERVAL    = 5
 

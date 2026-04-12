@@ -1,4 +1,5 @@
 import json
+import os
 import sqlite3
 from datetime import datetime, timezone
 from typing import Optional
@@ -6,8 +7,8 @@ import paho.mqtt.client as mqtt
 import hashlib
 import hmac as hmac_lib
 
-BROKER_HOST     = "localhost"
-BROKER_PORT     = 1883
+BROKER_HOST = os.getenv("BROKER_HOST", "localhost")
+BROKER_PORT = int(os.getenv("BROKER_PORT", 1883))
 SUBSCRIBE_TOPIC = "farm/+/telemetry"
 DB_PATH         = "telemetry.db"
 SHARED_SECRET = "farmkey123"  # Must match the device's secret for hash validation
