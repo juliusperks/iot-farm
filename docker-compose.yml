@@ -18,7 +18,7 @@ services:
     environment:
       - DEVICE_ID=paddock-sensor-01
       - BROKER_HOST=broker
-      - BROKER_PORT=1883
+      - BROKER_PORT=8883
   
   subscriber:
     build:
@@ -31,7 +31,7 @@ services:
       - farm-net
     environment:
       - BROKER_HOST=broker
-      - BROKER_PORT=1883
+      - BROKER_PORT=8883
 
   monitor:
     build:
@@ -44,7 +44,7 @@ services:
       - farm-net
     environment:
       - BROKER_HOST=broker
-      - BROKER_PORT=1883
+      - BROKER_PORT=8883
   
 networks:
   farm-net:
