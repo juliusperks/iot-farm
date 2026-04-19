@@ -3,6 +3,7 @@ services:
     build: ./mqtt-broker
     ports:
       - "1883:1883"
+      - "8883:8883"
     networks:
       - farm-net
 
@@ -45,6 +46,34 @@ services:
     environment:
       - BROKER_HOST=broker
       - BROKER_PORT=8883
+
+  gate:
+    build:
+      context: .
+      dockerfile: Dockerfile.gate
+    container_name: paddock-gate
+    depends_on:
+      - broker
+    networks:
+      - farm-net
+    environment:
+      - BROKER_HOST=broker
+      - BROKER_PORT=8883
+      - DEVICE_ID=paddock-gate-01
+
+  weather:
+    build:
+      context: .
+      dockerfile: Dockerfile.weather
+    container_name: gippsland-weather
+    depends_on:
+      - broker
+    networks:
+      - farm-net
+    environment:
+      - BROKER_HOST=broker
+      - BROKER_PORT=8883
+      - DEVICE_ID=gippsland-weather-01
   
 networks:
   farm-net:

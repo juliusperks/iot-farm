@@ -8,7 +8,7 @@ import hashlib
 import paho.mqtt.client as mqtt
 
 BROKER_HOST = os.getenv("BROKER_HOST", "localhost")
-BROKER_PORT = int(os.getenv("BROKER_PORT", 1883))
+BROKER_PORT = int(os.getenv("BROKER_PORT", 8883))
 DEVICE_ID = os.getenv("DEVICE_ID", "paddock-gate-01")
 TELEMETRY_TOPIC = f"farm/{DEVICE_ID}/telemetry"
 COMMAND_TOPIC = f"farm/{DEVICE_ID}/commands"
@@ -39,7 +39,7 @@ class PaddockGate:
     
     def _apply_time_rules(self):
         hour = datetime.now(timezone.utc).hour
-        if seld.open_hour <= hour < self.close_hour:
+        if self.open_hour <= hour < self.close_hour:
             self.state = GateState.OPEN
         else:
             self.state = GateState.CLOSED
@@ -94,6 +94,7 @@ if __name__ == "__main__":
     client.username_pw_set("paddock-gate-01", "farm123")
     client.on_connect = on_connect
     client.on_message = on_message
+    client.tls_set(ca_certs="/app/ca.crt")
     client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
     
     client.loop_start()
