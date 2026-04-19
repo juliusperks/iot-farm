@@ -3,7 +3,7 @@ import os
 import time
 from datetime import datetime, timezone
 from enum import Enum
-import hmac
+import hmac as hmac_lib
 import hashlib
 import paho.mqtt.client as mqtt
 
@@ -13,6 +13,7 @@ DEVICE_ID = os.getenv("DEVICE_ID", "paddock-gate-01")
 TELEMETRY_TOPIC = f"farm/{DEVICE_ID}/telemetry"
 COMMAND_TOPIC = f"farm/{DEVICE_ID}/commands"
 WEATHER_TOPIC = "farm/gippsland-weather-01/telemetry"
+MAX_MESSAGE_AGE_SECONDS = 30
 SHARED_SECRET = "farmkey123"  # In production, use a secure method to store secrets
 interval = 10  # seconds
 
@@ -65,12 +66,36 @@ class PaddockGate:
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
         payload_bytes = json.dumps(payload, sort_keys=True).encode()
-        payload["hash"] = hmac.new(
+        payload["hash"] = hmac_lib.new(
             SHARED_SECRET.encode(),
             payload_bytes,
             hashlib.sha256
         ).hexdigest()
         return payload
+
+def verify_weather_payload(payload: dict) -> bool:
+    received_hash = payload.get("hash")
+    if not received_hash:
+        return False
+
+    # Check timestamp age
+    try:
+        msg_time = datetime.fromisoformat(payload["timestamp"])
+        age = (datetime.now(timezone.utc) - msg_time).total_seconds()
+        if age > MAX_MESSAGE_AGE_SECONDS:
+            print(f"[{DEVICE_ID}] Rejected stale message - age: {age:.0f}s")
+            return False
+    except (KeyError, ValueError):
+        return False
+
+    check = {k: v for k, v in payload.items() if k != "hash"}
+    payload_bytes = json.dumps(check, sort_keys=True).encode()
+    expected = hmac_lib.new(
+        SHARED_SECRET.encode(),
+        payload_bytes,
+        hashlib.sha256
+    ).hexdigest()
+    return hmac_lib.compare_digest(received_hash, expected)
 
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
@@ -86,6 +111,9 @@ def on_message(client, userdata, msg):
     try:
         payload = json.loads(msg.payload.decode())
         if msg.topic == WEATHER_TOPIC:
+            if not verify_weather_payload(payload):
+                print(f"[{DEVICE_ID}] Rejected weather message - HMAC verification failed")
+                return
             temp = payload.get("temperature")
             if temp is not None:
                 print(f"[{DEVICE_ID}] Weather update: {temp}°C")
