@@ -33,10 +33,30 @@ RUN cp /mosquitto/certs/ca.crt /tmp/ca.crt
 # Create password file
 RUN mkdir -p /mosquitto/config && \
     mosquitto_passwd -c -b /mosquitto/config/passwd paddock-sensor-01 farm123 && \
-    mosquitto_passwd -b /mosquitto/config/passwd cloud-subscriber farm123
+    mosquitto_passwd -b /mosquitto/config/passwd cloud-subscriber farm123 && \
+    mosquitto_passwd -b /mosquitto/config/passwd gippsland-weather-01 farm123 && \
+    mosquitto_passwd -b /mosquitto/config/passwd paddock-gate-01 farm123 && \
+    mosquitto_passwd -b /mosquitto/config/passwd iot-monitor farm123
 
 # Create ACL file
-RUN printf "user paddock-sensor-01\ntopic write farm/paddock-sensor-01/telemetry\n\nuser cloud-subscriber\ntopic read farm/#\n" > /mosquitto/config/acl
+RUN printf "\
+user paddock-sensor-01\n\
+topic write farm/paddock-sensor-01/telemetry\n\
+\n\
+user gippsland-weather-01\n\
+topic write farm/gippsland-weather-01/telemetry\n\
+\n\
+user paddock-gate-01\n\
+topic write farm/paddock-gate-01/telemetry\n\
+topic read farm/paddock-gate-01/commands\n\
+\n\
+user cloud-subscriber\n\
+topic read farm/#\n\
+\n\
+user iot-monitor\n\
+topic read farm/#\n\
+topic write farm/+/commands\n\
+" > /mosquitto/config/acl
 
 # Set permissions
 RUN chown -R mosquitto:mosquitto /mosquitto/config /mosquitto/certs && \
