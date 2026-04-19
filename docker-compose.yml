@@ -60,6 +60,7 @@ services:
       - BROKER_HOST=broker
       - BROKER_PORT=8883
       - DEVICE_ID=paddock-gate-01
+      - PYTHONUNBUFFERED=1
 
   weather:
     build:
@@ -74,6 +75,7 @@ services:
       - BROKER_HOST=broker
       - BROKER_PORT=8883
       - DEVICE_ID=gippsland-weather-01
+      - PYTHONUNBUFFERED=1
   
 networks:
   farm-net:

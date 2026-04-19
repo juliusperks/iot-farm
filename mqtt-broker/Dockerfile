@@ -49,6 +49,7 @@ topic write farm/gippsland-weather-01/telemetry\n\
 user paddock-gate-01\n\
 topic write farm/paddock-gate-01/telemetry\n\
 topic read farm/paddock-gate-01/commands\n\
+topic read farm/gippsland-weather-01/telemetry\n\
 \n\
 user cloud-subscriber\n\
 topic read farm/#\n\

@@ -12,8 +12,10 @@ BROKER_PORT = int(os.getenv("BROKER_PORT", 8883))
 DEVICE_ID = os.getenv("DEVICE_ID", "paddock-gate-01")
 TELEMETRY_TOPIC = f"farm/{DEVICE_ID}/telemetry"
 COMMAND_TOPIC = f"farm/{DEVICE_ID}/commands"
+WEATHER_TOPIC = "farm/gippsland-weather-01/telemetry"
 SHARED_SECRET = "farmkey123"  # In production, use a secure method to store secrets
 interval = 10  # seconds
+
 
 class GateState(Enum):
     OPEN = "open"
@@ -69,12 +71,13 @@ class PaddockGate:
             hashlib.sha256
         ).hexdigest()
         return payload
-    
+
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print(f"[{DEVICE_ID}] Connected")
         client.subscribe(COMMAND_TOPIC, qos=1)
-        print(f"[{DEVICE_ID}] Subscribed to {COMMAND_TOPIC}")
+        client.subscribe(WEATHER_TOPIC, qos=1)
+        print(f"[{DEVICE_ID}] Subscribed to {COMMAND_TOPIC} and {WEATHER_TOPIC}")
     else:
         print(f"[{DEVICE_ID}] Failed rc={rc}")
 
@@ -82,11 +85,17 @@ def on_message(client, userdata, msg):
     gate = userdata
     try:
         payload = json.loads(msg.payload.decode())
-        command = payload.get("command", "").upper()
-        print(f"[{DEVICE_ID}] Received command: {command}")
-        gate.handle_command(command)
+        if msg.topic == WEATHER_TOPIC:
+            temp = payload.get("temperature")
+            if temp is not None:
+                print(f"[{DEVICE_ID}] Weather update: {temp}°C")
+                gate.update_weather(float(temp))
+        else:
+            command = payload.get("command", "").upper()
+            print(f"[{DEVICE_ID}] Received command: {command}")
+            gate.handle_command(command)
     except Exception as e:
-        print(f"[{DEVICE_ID}] Bad command message: {e}")
+        print(f"[{DEVICE_ID}] Bad message: {e}")
 
 if __name__ == "__main__":
     gate = PaddockGate(device_id=DEVICE_ID)
